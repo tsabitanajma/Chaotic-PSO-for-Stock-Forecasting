@@ -6,26 +6,10 @@ import pandas as pd
 import numpy as np
 import pickle
 import warnings
-warnings.filterwarnings('ignore')
-
-import streamlit as st
-
-# ... (lanjutan kode Anda)
-
-# ============================================
-# IMPORTS
-# ============================================
-import pandas as pd
-import numpy as np
-import pickle
 import plotly.graph_objects as go
-import warnings
-warnings.filterwarnings('ignore')
-
-# ============================================
-# SET PAGE CONFIG
-# ============================================
 import streamlit as st
+
+warnings.filterwarnings('ignore')
 
 st.set_page_config(
     page_title="Prediksi Saham BRIS",
