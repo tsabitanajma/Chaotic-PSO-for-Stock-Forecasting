@@ -648,10 +648,9 @@ if predict_btn:
 # ============================================
 # FOOTER - VERSI FIXED
 # ============================================
-st.markdown("---")
+import streamlit.components.v1 as components
 
-# Footer Container
-st.markdown("""
+components.html("""
 <div class="footer-container">
     <div class="footer-grid">
         <div class="footer-item">
@@ -671,22 +670,16 @@ st.markdown("""
             <div class="footer-value">Educational</div>
         </div>
     </div>
-    
+
     <div class="separator-line"></div>
-    
-    <div style="margin: 15px 0;">
-        <p style="font-weight: 600; color: #1A3A2A; margin-bottom: 5px;">
-            © 2024 BSI Stock Predictor
-        </p>
-        <p style="color: #666; margin-bottom: 10px;">
-            XGBoost + Chaotic PSO | Untuk tujuan edukasional
-        </p>
-        <p style="font-size: 12px; color: #888;">
-            Disclaimer: Hasil prediksi tidak menjamin keakuratan 100%.
-        </p>
-    </div>
+
+    <p style="font-weight:600;">© 2024 BSI Stock Predictor</p>
+    <p>XGBoost + Chaotic PSO | Untuk tujuan edukasional</p>
+    <p style="font-size:12px;">
+        Disclaimer: Hasil prediksi tidak menjamin keakuratan 100%.
+    </p>
 </div>
-""", unsafe_allow_html=True)
+""", height=260)
 
 # ============================================
 # REFRESH BUTTON
