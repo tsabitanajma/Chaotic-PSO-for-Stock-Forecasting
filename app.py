@@ -80,6 +80,12 @@ st.markdown("""
         border-radius: 8px;
         padding: 10px 24px;
         font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(243, 112, 33, 0.3);
     }
     
     /* Metric cards */
@@ -89,7 +95,7 @@ st.markdown("""
         padding: 20px;
         border-left: 5px solid var(--bsi-orange);
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin: 10px 0;
+        margin: 15px 0 !important;
     }
     
     [data-testid="stMetricValue"] {
@@ -151,15 +157,48 @@ st.markdown("""
         margin: 20px 0;
     }
     
-    /* Footer */
-    .footer {
+    /* Footer Styling */
+    .footer-container {
         text-align: center;
-        padding: 20px;
+        padding: 25px 20px;
         color: var(--bsi-dark);
         font-size: 14px;
         border-top: 2px solid var(--bsi-green);
         margin-top: 40px;
         background: linear-gradient(90deg, #f8fdf9, white);
+        border-radius: 0 0 10px 10px;
+    }
+    
+    .footer-grid {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .footer-item {
+        text-align: center;
+    }
+    
+    .footer-label {
+        font-weight: 700;
+        color: #00A651;
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    .footer-value {
+        color: #1A3A2A;
+        font-size: 14px;
+    }
+    
+    .separator-line {
+        height: 3px;
+        background: linear-gradient(90deg, #00A651, #F37021);
+        width: 120px;
+        margin: 15px auto;
+        border-radius: 3px;
     }
     
     /* Spacing fix */
@@ -181,7 +220,7 @@ st.markdown("""
         display: block;
     }
 
-    /* Tambahkan di CSS yang sudah ada */
+    /* Fix untuk expander */
     .st-expander {
         margin-top: 20px !important;
         margin-bottom: 20px !important;
@@ -189,17 +228,6 @@ st.markdown("""
     
     .st-expander > div {
         padding: 15px !important;
-    }
-    
-    /* Fix untuk metric cards spacing */
-    [data-testid="stMetric"] {
-        margin: 15px 0 !important;
-    }
-    
-    /* Fix untuk text dalam expander */
-    .st-emotion-cache-1fvpi8z p {
-        margin-bottom: 8px !important;
-        line-height: 1.5 !important;
     }
     
     /* Fix untuk list dalam markdown */
@@ -211,6 +239,12 @@ st.markdown("""
     
     li {
         margin-bottom: 5px !important;
+    }
+    
+    /* Fix untuk container */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
     }
 
 </style>
@@ -243,6 +277,33 @@ def predict_price(model, scaler_x, scaler_y, features):
     except Exception as e:
         st.error(f"Error prediksi: {e}")
         return None
+
+def create_bar_chart_matplotlib(current_price, predicted_price):
+    """Create bar chart using matplotlib as fallback"""
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    categories = ['Hari Ini', 'Prediksi Besok']
+    values = [current_price, predicted_price]
+    colors = ['#00A651', '#F37021']
+    
+    bars = ax.bar(categories, values, color=colors, width=0.6, edgecolor='white', linewidth=2)
+    
+    # Add value labels on top of bars
+    for bar, value in zip(bars, values):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                f'Rp {value:,.0f}', ha='center', va='bottom', 
+                fontsize=12, fontweight='bold')
+    
+    # Customize chart
+    ax.set_ylabel('Harga (IDR)', fontsize=12, fontweight='bold')
+    ax.set_title('Perbandingan Harga', fontsize=16, fontweight='bold', pad=20)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'Rp {x:,.0f}'))
+    ax.grid(axis='y', alpha=0.3)
+    ax.set_axisbelow(True)
+    
+    plt.tight_layout()
+    return fig
 
 # ============================================
 # SIDEBAR
@@ -308,7 +369,7 @@ with st.sidebar:
     """)
 
 # ============================================
-# HEADER UTAMA - FIXED
+# HEADER UTAMA
 # ============================================
 
 # Logo dan judul dalam satu baris
@@ -447,7 +508,7 @@ with col_btn2:
     )
 
 # ============================================
-# HASIL PREDIKSI (TANPA ANALISIS & REKOMENDASI)
+# HASIL PREDIKSI
 # ============================================
 if predict_btn:
     with st.spinner("🧠 Memproses prediksi..."):
@@ -505,39 +566,44 @@ if predict_btn:
             # Visualisasi perbandingan
             st.markdown("### 📈 Visualisasi Perbandingan")
             
-            # Bar chart
-            fig_bar = go.Figure(data=[
-                go.Bar(
-                    name='Hari Ini',
-                    x=['Harga'],
-                    y=[close_price],
-                    marker_color='#00A651',
-                    width=0.4,
-                    text=[f'Rp {close_price:,.0f}'],
-                    textposition='outside'
-                ),
-                go.Bar(
-                    name='Prediksi Besok',
-                    x=['Prediksi'],
-                    y=[predicted_price],
-                    marker_color='#F37021',
-                    width=0.4,
-                    text=[f'Rp {predicted_price:,.0f}'],
-                    textposition='outside'
+            if PLOTLY_AVAILABLE:
+                # Bar chart dengan Plotly
+                fig_bar = go.Figure(data=[
+                    go.Bar(
+                        name='Hari Ini',
+                        x=['Harga'],
+                        y=[close_price],
+                        marker_color='#00A651',
+                        width=0.4,
+                        text=[f'Rp {close_price:,.0f}'],
+                        textposition='outside'
+                    ),
+                    go.Bar(
+                        name='Prediksi Besok',
+                        x=['Prediksi'],
+                        y=[predicted_price],
+                        marker_color='#F37021',
+                        width=0.4,
+                        text=[f'Rp {predicted_price:,.0f}'],
+                        textposition='outside'
+                    )
+                ])
+                
+                fig_bar.update_layout(
+                    title='Perbandingan Harga',
+                    yaxis_title='Harga (IDR)',
+                    template='plotly_white',
+                    height=400,
+                    showlegend=True,
+                    bargap=0.5
                 )
-            ])
-            
-            fig_bar.update_layout(
-                title='Perbandingan Harga',
-                yaxis_title='Harga (IDR)',
-                template='plotly_white',
-                height=400,
-                showlegend=True,
-                bargap=0.5
-            )
-            fig_bar.update_yaxes(tickprefix='Rp ')
-            
-            st.plotly_chart(fig_bar, use_container_width=True)
+                fig_bar.update_yaxes(tickprefix='Rp ')
+                
+                st.plotly_chart(fig_bar, use_container_width=True)
+            else:
+                # Fallback ke matplotlib
+                fig = create_bar_chart_matplotlib(close_price, predicted_price)
+                st.pyplot(fig)
             
             # Detail hasil
             with st.expander("📋 Detail Hasil Prediksi", expanded=True):
@@ -560,33 +626,47 @@ if predict_btn:
                     - **Perubahan**: Rp {change:+,.0f}
                     - **% Perubahan**: {pct_change:+.2f}%
                     - **Model**: XGBoost-CPSO
-                    """)  # Hapus Accuracy dari sini
+                    """)
 
 # ============================================
-# FOOTER
+# FOOTER - VERSI FIXED
 # ============================================
 st.markdown("---")
+
+# Footer Container
 st.markdown("""
-<div class='footer'>
-    <div style='display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; flex-wrap: wrap;'>
-        <div style='text-align: center;'>
-            <div style='font-weight: 700; color: #00A651;'>Model</div>
-            <div>XGBoost-Chaotic PSO</div>
+<div class="footer-container">
+    <div class="footer-grid">
+        <div class="footer-item">
+            <div class="footer-label">Model</div>
+            <div class="footer-value">XGBoost-CPSO</div>
         </div>
-        <div style='text-align: center;'>
-            <div style='font-weight: 700; color: #00A651;'>Symbol</div>
-            <div>BRIS.JK</div>
+        <div class="footer-item">
+            <div class="footer-label">Symbol</div>
+            <div class="footer-value">BRIS.JK</div>
+        </div>
+        <div class="footer-item">
+            <div class="footer-label">Type</div>
+            <div class="footer-value">Regression</div>
+        </div>
+        <div class="footer-item">
+            <div class="footer-label">Purpose</div>
+            <div class="footer-value">Educational</div>
         </div>
     </div>
     
-    <hr style='border: none; height: 3px; background: linear-gradient(90deg, #00A651, #F37021); width: 100px; margin: 10px auto; border-radius: 3px;'>
+    <div class="separator-line"></div>
     
-    <p style='margin-top: 15px; margin-bottom: 10px;'>
-        © 2024 BSI Stock Predictor | XGBoost + Chaotic PSO | Untuk tujuan edukasional
-    </p>
-    
-    <div style='font-size: 12px; color: #666; margin-top: 5px;'>
-        Disclaimer: Hasil prediksi tidak menjamin keakuratan 100%.
+    <div style="margin: 15px 0;">
+        <p style="font-weight: 600; color: #1A3A2A; margin-bottom: 5px;">
+            © 2024 BSI Stock Predictor
+        </p>
+        <p style="color: #666; margin-bottom: 10px;">
+            XGBoost + Chaotic PSO | Untuk tujuan edukasional
+        </p>
+        <p style="font-size: 12px; color: #888;">
+            Disclaimer: Hasil prediksi tidak menjamin keakuratan 100%.
+        </p>
     </div>
 </div>
 """, unsafe_allow_html=True)
