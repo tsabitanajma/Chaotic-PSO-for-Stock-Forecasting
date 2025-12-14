@@ -1,4 +1,3 @@
-
 # ============================================
 # IMPORTS
 # ============================================
@@ -8,6 +7,8 @@ import pandas as pd
 import numpy as np
 import pickle
 import warnings
+import sys
+import traceback
 
 # SET PAGE CONFIG HARUS DULUAN SETELAH IMPORT STREAMLIT
 st.set_page_config(
@@ -17,13 +18,22 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# SEKARANG IMPORT LAINNYA
+# INISIALISASI VARIABLE DI LUAR TRY-EXCEPT
+PLOTLY_AVAILABLE = False
+
+# IMPORT PLOTLY DENGAN FALLBACK KE MATPLOTLIB
 try:
     import plotly.graph_objects as go
     import plotly.express as px
+    PLOTLY_AVAILABLE = True
+    PLOTLY_LOADED = True
 except ImportError as e:
-    st.error(f"Error importing plotly: {e}")
-    st.stop()
+    PLOTLY_LOADED = False
+    st.warning(f"⚠️ Plotly tidak tersedia: {e}. Menggunakan matplotlib sebagai fallback.")
+    # Fallback ke matplotlib
+    import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.use('Agg')
 
 warnings.filterwarnings('ignore')
 
@@ -280,6 +290,12 @@ def predict_price(model, scaler_x, scaler_y, features):
 
 def create_bar_chart_matplotlib(current_price, predicted_price):
     """Create bar chart using matplotlib as fallback"""
+    # Pastikan matplotlib sudah diimport
+    if not PLOTLY_LOADED:
+        import matplotlib.pyplot as plt
+        import matplotlib
+        matplotlib.use('Agg')
+    
     fig, ax = plt.subplots(figsize=(8, 6))
     
     categories = ['Hari Ini', 'Prediksi Besok']
@@ -566,7 +582,8 @@ if predict_btn:
             # Visualisasi perbandingan
             st.markdown("### 📈 Visualisasi Perbandingan")
             
-            if PLOTLY_AVAILABLE:
+            # Gunakan PLOTLY_LOADED untuk cek apakah plotly berhasil diimport
+            if PLOTLY_LOADED:
                 # Bar chart dengan Plotly
                 fig_bar = go.Figure(data=[
                     go.Bar(
@@ -629,44 +646,45 @@ if predict_btn:
                     """)
 
 # ============================================
-# FOOTER 
+# FOOTER - VERSI FIXED
 # ============================================
 st.markdown("---")
 
-# Horizontal line dengan warna BSI
+# Footer Container
 st.markdown("""
-<div style="height: 3px; background: linear-gradient(90deg, #00A651, #F37021); 
-            width: 150px; margin: 0 auto 20px auto; border-radius: 3px;"></div>
-""", unsafe_allow_html=True)
-
-# Info baris pertama
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown("**Model:** XGBoost-CPSO")
-with col2:
-    st.markdown("**Symbol:** BRIS.JK")
-
-# Info baris kedua  
-col3, col4 = st.columns(2)
-with col3:
-    st.markdown("**Type:** Regression Model")
-with col4:
-    st.markdown("**Purpose:** Educational")
-
-# Copyright
-st.markdown("""
-<div style="text-align: center; margin-top: 20px; padding: 15px; 
-            background: linear-gradient(90deg, #f8fdf9, white); 
-            border-radius: 10px;">
-    <p style="color: #1A3A2A; font-weight: 600;">
-        © 2025 BSI Stock Predictor
-    </p>
-    <p style="color: #666; font-size: 14px;">
-        XGBoost + Chaotic PSO | Untuk tujuan edukasional
-    </p>
-    <p style="color: #888; font-size: 12px; margin-top: 10px;">
-        Disclaimer: Hasil prediksi tidak menjamin keakuratan 100%.
-    </p>
+<div class="footer-container">
+    <div class="footer-grid">
+        <div class="footer-item">
+            <div class="footer-label">Model</div>
+            <div class="footer-value">XGBoost-CPSO</div>
+        </div>
+        <div class="footer-item">
+            <div class="footer-label">Symbol</div>
+            <div class="footer-value">BRIS.JK</div>
+        </div>
+        <div class="footer-item">
+            <div class="footer-label">Type</div>
+            <div class="footer-value">Regression</div>
+        </div>
+        <div class="footer-item">
+            <div class="footer-label">Purpose</div>
+            <div class="footer-value">Educational</div>
+        </div>
+    </div>
+    
+    <div class="separator-line"></div>
+    
+    <div style="margin: 15px 0;">
+        <p style="font-weight: 600; color: #1A3A2A; margin-bottom: 5px;">
+            © 2024 BSI Stock Predictor
+        </p>
+        <p style="color: #666; margin-bottom: 10px;">
+            XGBoost + Chaotic PSO | Untuk tujuan edukasional
+        </p>
+        <p style="font-size: 12px; color: #888;">
+            Disclaimer: Hasil prediksi tidak menjamin keakuratan 100%.
+        </p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -677,3 +695,12 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🔄 Reset Form", type="secondary", use_container_width=True):
         st.rerun()
+
+# ============================================
+# DEBUG INFO (Optional - bisa dihapus setelah deploy sukses)
+# ============================================
+with st.sidebar:
+    with st.expander("ℹ️ Debug Info", expanded=False):
+        st.write(f"Python: {sys.version.split()[0]}")
+        st.write(f"Streamlit: {st.__version__}")
+        st.write(f"Plotly Loaded: {PLOTLY_LOADED}")
