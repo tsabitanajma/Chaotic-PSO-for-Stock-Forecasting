@@ -282,7 +282,7 @@ def predict_price(model, scaler_x, scaler_y, features):
     try:
         features_scaled = scaler_x.transform(features)
         pred_scaled = model.predict(features_scaled)
-        pred_price = float(scaler_y.inverse_transform(pred_scaled.reshape(-1, 1)))
+        pred_price = float(scaler_y.inverse_transform(pred_scaled.reshape(-1, 1))[0][0])
         return pred_price
     except Exception as e:
         st.error(f"Error prediksi: {e}")
