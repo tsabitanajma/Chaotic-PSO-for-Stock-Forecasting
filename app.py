@@ -266,7 +266,7 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     try:
-        with open('model_cpso.pkl', 'rb') as f:
+        with open('model_chopso.pkl', 'rb') as f:
             model = pickle.load(f)
         with open('scaler_x.pkl', 'rb') as f:
             scaler_x = pickle.load(f)
@@ -370,7 +370,7 @@ with st.sidebar:
     # Informasi Model
     st.markdown("**⚙️ Model Details**")
     st.markdown("""
-    - **Algorithm**: XGBoost-CPSO
+    - **Algorithm**: XGBoost-CHOPSO
     - **Features**: 5 parameters
     - **Training**: 2021-2025 data
     """)
@@ -642,7 +642,7 @@ if predict_btn:
                     - **Prediksi**: Rp {predicted_price:,.0f}
                     - **Perubahan**: Rp {change:+,.0f}
                     - **% Perubahan**: {pct_change:+.2f}%
-                    - **Model**: XGBoost-CPSO
+                    - **Model**: XGBoost-CHOPSO
                     """)
 
 # ============================================
